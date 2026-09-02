@@ -1,0 +1,10 @@
+# FUNCIONALIDAD: san_broker/repo
+# Material de la charla (video de 2 GB y transcripción privada): nunca al repo
+material/
+# Entorno y basura de Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store

@@ -1,0 +1,16 @@
+{
+  "_funcionalidad": "san_broker/ponderacion",
+  "_nota": "Ponderación de cada indicador en el score final (suman 100). Es lo que Santiago llamó 'esto pesa 60%, esto 20%'. Se ajusta con la práctica sin tocar código. Umbrales: score >= comprar -> COMPRAR, score <= vender -> VENDER, en el medio ESPERAR.",
+  "pesos": {
+    "macd_cruce": 35,
+    "macd_histograma": 15,
+    "koncorde_tendencia": 20,
+    "koncorde_manos_fuertes": 15,
+    "volumen": 15
+  },
+  "umbrales": {
+    "comprar": 35,
+    "vender": -35,
+    "dias_cruce_reciente": 5
+  }
+}

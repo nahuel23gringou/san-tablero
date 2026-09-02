@@ -1,0 +1,290 @@
+<!doctype html>
+<!-- FUNCIONALIDAD: san_broker/pagina -->
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>SAN · Tablero de señales</title>
+<style>
+  :root {
+    --fondo: #0f1318; --panel: #171c23; --panel2: #1e242d; --borde: #2a323d;
+    --tinta: #e8edf3; --tinta2: #aab4c0; --tinta3: #7c8794;
+    --acento: #4c8dff; --alcista: #3ddc84; --bajista: #ff5c5c; --neutral: #9aa4b2; --ambar: #f2c14e;
+    --radio: 12px; --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--fondo); color: var(--tinta);
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif; }
+  a { color: var(--acento); text-decoration: none; } a:hover { text-decoration: underline; }
+  .contenedor { max-width: 1080px; margin: 0 auto; padding: 16px; }
+  header { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: baseline; justify-content: space-between; padding: 8px 0 14px; border-bottom: 1px solid var(--borde); }
+  h1 { font-size: 22px; margin: 0; letter-spacing: .2px; }
+  h1 small { color: var(--tinta3); font-weight: 400; font-size: 14px; margin-left: 8px; }
+  .meta { color: var(--tinta2); font-size: 13px; }
+  .conteo { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 600; border: 1px solid var(--borde); background: var(--panel); color: var(--tinta2); white-space: nowrap; }
+  .chip .ico { font-size: 11px; }
+  .chip.alcista { color: var(--alcista); border-color: color-mix(in srgb, var(--alcista) 40%, transparent); }
+  .chip.bajista { color: var(--bajista); border-color: color-mix(in srgb, var(--bajista) 40%, transparent); }
+  .chip.neutral { color: var(--neutral); }
+  .chip.ambar { color: var(--ambar); }
+  section { margin-top: 20px; }
+  h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .8px; color: var(--tinta3); margin: 0 0 10px; font-weight: 600; }
+  .panel { background: var(--panel); border: 1px solid var(--borde); border-radius: var(--radio); padding: 14px 16px; }
+  .resumen ul { margin: 8px 0 0; padding-left: 18px; } .resumen li { margin: 4px 0; }
+  .nota-ia { color: var(--tinta3); font-size: 12px; margin-top: 10px; }
+  .filtros { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+  .filtros input { flex: 1 1 180px; min-width: 160px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--borde); background: var(--panel); color: var(--tinta); font-size: 14px; }
+  .filtros button { cursor: pointer; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--borde); background: var(--panel); color: var(--tinta2); font-size: 13px; }
+  .filtros button.activo { background: var(--panel2); color: var(--tinta); border-color: var(--acento); }
+  .filtros .sep { width: 1px; height: 22px; background: var(--borde); }
+  .lista { display: flex; flex-direction: column; gap: 8px; }
+  .activo { background: var(--panel); border: 1px solid var(--borde); border-radius: var(--radio); overflow: hidden; }
+  .fila { display: grid; grid-template-columns: minmax(150px, 1.4fr) 110px 130px 150px 130px 28px; gap: 12px; align-items: center; padding: 12px 14px; cursor: pointer; }
+  .fila:hover { background: var(--panel2); }
+  .nombre b { font-size: 15px; } .nombre small { display: block; color: var(--tinta3); font-size: 12.5px; }
+  .precio { font-family: var(--mono); font-size: 14px; text-align: right; } .precio small { display: block; font-size: 12px; }
+  .pos { color: var(--alcista); } .neg { color: var(--bajista); } .cero { color: var(--tinta3); }
+  .grafico { position: relative; height: 40px; }
+  .grafico svg { width: 100%; height: 40px; display: block; overflow: visible; }
+  .grafico .tip { position: absolute; top: -26px; transform: translateX(-50%); background: #000; color: #fff; font: 11px var(--mono); padding: 2px 6px; border-radius: 4px; white-space: nowrap; pointer-events: none; display: none; }
+  .score { display: flex; flex-direction: column; gap: 4px; }
+  .barra { position: relative; height: 8px; background: var(--panel2); border-radius: 4px; overflow: hidden; }
+  .barra::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--borde); }
+  .barra i { position: absolute; top: 0; bottom: 0; border-radius: 4px; }
+  .score small { font-family: var(--mono); font-size: 11.5px; color: var(--tinta3); }
+  .flecha { color: var(--tinta3); text-align: center; transition: transform .2s; }
+  .activo.abierto .flecha { transform: rotate(180deg); }
+  .detalle { display: none; border-top: 1px solid var(--borde); padding: 12px 16px 16px; background: #131820; }
+  .activo.abierto .detalle { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .detalle h4 { margin: 0 0 6px; font-size: 12.5px; text-transform: uppercase; letter-spacing: .6px; color: var(--tinta3); }
+  .detalle ul { margin: 0; padding-left: 18px; } .detalle li { margin: 3px 0; font-size: 14px; }
+  .tabla { width: 100%; border-collapse: collapse; font-size: 13px; } .tabla td { padding: 3px 6px 3px 0; border-bottom: 1px dashed var(--borde); }
+  .tabla td:last-child { text-align: right; font-family: var(--mono); }
+  .noticia { padding: 8px 0; border-bottom: 1px solid var(--borde); } .noticia:last-child { border-bottom: 0; }
+  .noticia a { color: var(--tinta); font-weight: 500; } .noticia .fuente { color: var(--tinta3); font-size: 12px; margin-top: 2px; }
+  .noticia .bajada { color: var(--tinta2); font-size: 13px; margin-top: 2px; }
+  .vacio { color: var(--tinta3); font-size: 13.5px; }
+  .ia-nota { margin-top: 10px; padding: 8px 10px; border-left: 3px solid var(--acento); background: var(--panel2); border-radius: 6px; font-size: 13.5px; }
+  footer { margin-top: 32px; padding: 16px 0 24px; border-top: 1px solid var(--borde); color: var(--tinta3); font-size: 12.5px; line-height: 1.6; }
+  .aviso { background: #2a2416; border: 1px solid #5a4a1e; color: var(--ambar); padding: 10px 14px; border-radius: 8px; font-size: 13.5px; margin-top: 12px; }
+  @media (max-width: 760px) {
+    .fila { grid-template-columns: 1fr 100px 28px; grid-template-areas: "n p f" "g g g" "s s s" "c c c"; gap: 8px 10px; }
+    .nombre { grid-area: n; } .precio { grid-area: p; } .grafico { grid-area: g; } .score { grid-area: s; } .senal { grid-area: c; } .flecha { grid-area: f; }
+    .activo.abierto .detalle { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="contenedor">
+  <header>
+    <div>
+      <h1>SAN <small>Tablero de señales</small></h1>
+      <div class="meta" id="meta">Cargando…</div>
+    </div>
+    <div class="conteo" id="conteo"></div>
+  </header>
+
+  <div id="avisos"></div>
+
+  <section id="sec-resumen" hidden>
+    <h2>Resumen del día</h2>
+    <div class="panel resumen" id="resumen"></div>
+  </section>
+
+  <section>
+    <h2>Activos</h2>
+    <div class="filtros" id="filtros">
+      <input id="buscar" type="search" placeholder="Buscar activo (AAPL, Galicia, oro…)">
+      <button data-f="senal" data-v="" class="activo">Todas</button>
+      <button data-f="senal" data-v="COMPRAR">▲ Alcistas</button>
+      <button data-f="senal" data-v="VENDER">▼ Bajistas</button>
+      <button data-f="senal" data-v="ESPERAR">● Neutrales</button>
+      <span class="sep"></span>
+      <button data-f="cat" data-v="" class="activo">Todo</button>
+      <button data-f="cat" data-v="cedear">CEDEARs</button>
+      <button data-f="cat" data-v="etf">ETFs</button>
+      <button data-f="cat" data-v="argentina">Argentina</button>
+      <span class="sep"></span>
+      <button data-f="orden" data-v="score" class="activo">Por score</button>
+      <button data-f="orden" data-v="var">Por variación</button>
+      <button data-f="orden" data-v="noticias">Con noticias</button>
+    </div>
+    <div class="lista" id="lista"></div>
+  </section>
+
+  <section>
+    <h2>Noticias del mercado</h2>
+    <div class="panel" id="noticias"></div>
+  </section>
+
+  <footer>
+    Herramienta de apoyo para uso personal. Las señales son la lectura automática de indicadores técnicos
+    (MACD 12/26/9, indicador tipo Koncorde según la fórmula publicada por Blai5 en 2008, volumen) sobre precios
+    de cierre; no son asesoramiento financiero ni recomendación de inversión. Los datos pueden tener errores o
+    demora. Toda decisión de inversión y sus resultados son exclusivamente de quien la toma.<br>
+    Precios: Yahoo Finance vía yfinance, uso personal no comercial, sin afiliación con Yahoo. Noticias: titulares
+    de los medios citados, con link a la fuente. El resumen del día lo genera una IA a partir de titulares y puede
+    contener errores.<br>
+    Desarrollado por NEURON P.
+  </footer>
+</div>
+
+<script>
+(function () {
+  const ETIQUETA = {
+    COMPRAR: { clase: "alcista", ico: "▲", texto: "ALCISTA", sub: "favorece compra" },
+    VENDER:  { clase: "bajista", ico: "▼", texto: "BAJISTA", sub: "favorece venta" },
+    ESPERAR: { clase: "neutral", ico: "●", texto: "NEUTRAL", sub: "esperar" },
+  };
+  const NOMBRE_COMP = {
+    macd_cruce: "MACD · cruce azul/naranja", macd_histograma: "MACD · histograma",
+    koncorde_tendencia: "Koncorde · montaña vs roja", koncorde_manos_fuertes: "Koncorde · manos fuertes",
+    volumen: "Volumen",
+  };
+  const estado = { senal: "", cat: "", orden: "score", texto: "" };
+  let datos = null;
+
+  const $ = (s, el) => (el || document).querySelector(s);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const fmt = (n, d) => n == null ? "—" : Number(n).toLocaleString("es-AR", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const signo = (n) => n == null ? "cero" : n > 0 ? "pos" : n < 0 ? "neg" : "cero";
+  const pct = (n) => n == null ? "—" : (n > 0 ? "+" : "") + fmt(n, 2) + "%";
+  const chip = (s, extra) => { const e = ETIQUETA[s]; return `<span class="chip ${e.clase}"><span class="ico">${e.ico}</span>${e.texto}${extra ? " · " + extra : ""}</span>`; };
+  const fechaCorta = (iso) => { if (!iso) return ""; const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }); };
+
+  function sparkline(serie, fechas) {
+    if (!serie || serie.length < 2) return "";
+    const w = 130, h = 36, min = Math.min(...serie), max = Math.max(...serie), r = (max - min) || 1;
+    const x = i => (i / (serie.length - 1)) * w, y = v => h - 2 - ((v - min) / r) * (h - 4);
+    const d = serie.map((v, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(v).toFixed(1)).join(" ");
+    const ult = serie[serie.length - 1];
+    return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" data-serie="${serie.join(",")}" data-fechas="${(fechas || []).join(",")}">
+      <path d="${d}" fill="none" stroke="var(--acento)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+      <circle cx="${x(serie.length - 1).toFixed(1)}" cy="${y(ult).toFixed(1)}" r="3" fill="var(--acento)" stroke="var(--panel)" stroke-width="2" vector-effect="non-scaling-stroke"/>
+      <line class="cursor" x1="0" x2="0" y1="0" y2="${h}" stroke="var(--tinta3)" stroke-width="1" stroke-dasharray="2 2" vector-effect="non-scaling-stroke" style="display:none"/>
+    </svg><div class="tip"></div>`;
+  }
+
+  function barra(score) {
+    const p = Math.min(100, Math.abs(score)) / 2;
+    const color = score >= 0 ? "var(--alcista)" : "var(--bajista)";
+    const est = score >= 0 ? `left:50%;width:${p}%` : `right:50%;width:${p}%`;
+    return `<div class="barra"><i style="${est};background:${color}"></i></div><small>score ${score > 0 ? "+" : ""}${fmt(score, 0)} · tendencia ${esc(score >= 0 ? "" : "")}</small>`;
+  }
+
+  function tarjeta(a) {
+    const e = ETIQUETA[a.senal];
+    const ia = a.ia ? `<div class="ia-nota"><b>Noticias (IA):</b> ${esc(a.ia.nota)} <span class="chip ${a.ia.tono > 0 ? "alcista" : a.ia.tono < 0 ? "bajista" : "neutral"}" style="margin-left:6px">${a.ia.tono > 0 ? "▲ tono positivo" : a.ia.tono < 0 ? "▼ tono negativo" : "● tono neutro"}</span></div>` : "";
+    const noticias = (a.noticias || []).length
+      ? a.noticias.map(n => `<div class="noticia"><a href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.titulo)}</a><div class="fuente">${esc(n.fuente)} · ${fechaCorta(n.fecha)}</div></div>`).join("")
+      : `<div class="vacio">Sin noticias vinculadas en las últimas 48 h.</div>`;
+    const comps = Object.entries(a.componentes || {}).map(([k, v]) =>
+      `<tr><td>${esc(NOMBRE_COMP[k] || k)}</td><td>${datos.pesos[k]}%</td><td class="${signo(v)}">${v > 0 ? "+" : ""}${fmt(v * datos.pesos[k], 0)}</td></tr>`).join("");
+    return `<article class="activo" data-simbolo="${esc(a.simbolo)}">
+      <div class="fila" role="button" tabindex="0" aria-expanded="false">
+        <div class="nombre"><b>${esc(a.simbolo)}</b> <span class="meta">${esc(a.byma !== a.simbolo ? "· en IOL: " + a.byma : "")}</span><small>${esc(a.nombre)} · ${esc(a.categoria === "cedear" ? "CEDEAR" : a.categoria === "etf" ? "ETF" : "Argentina")}</small></div>
+        <div class="precio">${esc(a.moneda === "ARS" ? "$" : "US$")} ${fmt(a.precio, 2)}<small class="${signo(a.var_dia)}">${pct(a.var_dia)} hoy</small></div>
+        <div class="grafico">${sparkline(a.serie, a.serie_fechas)}</div>
+        <div class="score">${barra(a.score)}</div>
+        <div class="senal">${chip(a.senal, e.sub)}</div>
+        <div class="flecha">⌄</div>
+      </div>
+      <div class="detalle">
+        <div>
+          <h4>Por qué</h4>
+          <ul>${(a.razones || []).map(r => `<li>${esc(r)}</li>`).join("")}</ul>
+          <h4 style="margin-top:12px">Cómo se armó el score</h4>
+          <table class="tabla">${comps}<tr><td><b>Total</b></td><td></td><td><b>${a.score > 0 ? "+" : ""}${fmt(a.score, 0)}</b></td></tr></table>
+          <h4 style="margin-top:12px">Números</h4>
+          <table class="tabla">
+            <tr><td>Tendencia (MACD sobre flotación)</td><td></td><td>${esc(a.tendencia)}</td></tr>
+            <tr><td>Tendencia larga (precio vs medias 50/200)</td><td></td><td>${esc(a.tendencia_larga)}</td></tr>
+            <tr><td>Variación 5 ruedas / 30 ruedas</td><td></td><td><span class="${signo(a.var_5d)}">${pct(a.var_5d)}</span> / <span class="${signo(a.var_30d)}">${pct(a.var_30d)}</span></td></tr>
+            <tr><td>MACD azul / naranja / histograma</td><td></td><td>${fmt(a.macd.azul, 2)} / ${fmt(a.macd.naranja, 2)} / <span class="${signo(a.macd.hist)}">${fmt(a.macd.hist, 2)}</span></td></tr>
+            <tr><td>Koncorde azul (fuertes) / verde (débiles)</td><td></td><td><span class="${signo(a.koncorde.azul)}">${fmt(a.koncorde.azul, 0)}</span> / ${fmt(a.koncorde.verde, 0)}</td></tr>
+            <tr><td>Koncorde montaña / roja</td><td></td><td>${fmt(a.koncorde.marron, 0)} / ${fmt(a.koncorde.media, 0)}</td></tr>
+            <tr><td>Volumen vs. media 20 ruedas</td><td></td><td>${fmt(a.volumen.ratio, 2)}x · vela ${a.volumen.verde ? "verde" : "roja"}</td></tr>
+          </table>
+        </div>
+        <div>
+          <h4>Noticias del activo</h4>
+          ${noticias}${ia}
+        </div>
+      </div>
+    </article>`;
+  }
+
+  function filtrar() {
+    let lista = datos.activos.slice();
+    if (estado.senal) lista = lista.filter(a => a.senal === estado.senal);
+    if (estado.cat) lista = lista.filter(a => a.categoria === estado.cat);
+    if (estado.texto) { const t = estado.texto.toLowerCase(); lista = lista.filter(a => (a.simbolo + " " + a.nombre + " " + a.byma).toLowerCase().includes(t)); }
+    if (estado.orden === "var") lista.sort((a, b) => (b.var_dia || 0) - (a.var_dia || 0));
+    else if (estado.orden === "noticias") lista.sort((a, b) => ((b.noticias || []).length + (b.ia ? 1 : 0)) - ((a.noticias || []).length + (a.ia ? 1 : 0)) || b.score - a.score);
+    else lista.sort((a, b) => b.score - a.score);
+    $("#lista").innerHTML = lista.length ? lista.map(tarjeta).join("") : `<div class="panel vacio">Nada que mostrar con esos filtros.</div>`;
+  }
+
+  function render() {
+    const d = datos;
+    $("#meta").textContent = `Datos al cierre del ${d.fecha_datos || "—"} · generado ${d.generado} (hora Argentina) · ${d.activos.length} activos`;
+    const c = d.conteo || {};
+    $("#conteo").innerHTML = chip("COMPRAR", c.COMPRAR || 0) + chip("VENDER", c.VENDER || 0) + chip("ESPERAR", c.ESPERAR || 0);
+    const avisos = [];
+    if (d.aviso_ia) avisos.push("Hoy no hubo resumen IA: " + esc(d.aviso_ia));
+    if (d.faltantes && d.faltantes.length) avisos.push("Sin datos hoy para: " + esc(d.faltantes.join(", ")));
+    $("#avisos").innerHTML = avisos.map(a => `<div class="aviso">${a}</div>`).join("");
+    if (d.resumen_ia) {
+      const r = d.resumen_ia;
+      const clima = r.clima === "positivo" ? chip("COMPRAR", "clima positivo") : r.clima === "negativo" ? chip("VENDER", "clima negativo") : chip("ESPERAR", "clima mixto");
+      $("#resumen").innerHTML = `${clima}<ul>${(r.resumen_mercado || []).map(x => `<li>${esc(x)}</li>`).join("")}</ul>` +
+        ((r.para_mirar || []).length ? `<h4 style="margin:12px 0 4px;font-size:13px;color:var(--tinta3);text-transform:uppercase;letter-spacing:.6px">Para mirar hoy</h4><ul>${r.para_mirar.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "") +
+        `<div class="nota-ia">Resumen generado automáticamente por IA (${esc(r.modelo || "")}) a partir de titulares. Puede contener errores. No verificado.</div>`;
+      $("#sec-resumen").hidden = false;
+    }
+    $("#noticias").innerHTML = (d.noticias || []).length
+      ? d.noticias.map(n => `<div class="noticia"><a href="${esc(n.link)}" target="_blank" rel="noopener">${esc(n.titulo)}</a>${n.bajada ? `<div class="bajada">${esc(n.bajada)}</div>` : ""}<div class="fuente">${esc(n.fuente)} · ${fechaCorta(n.fecha)}</div></div>`).join("")
+      : `<div class="vacio">Sin noticias.</div>`;
+    filtrar();
+  }
+
+  // interacción
+  document.addEventListener("click", ev => {
+    const b = ev.target.closest("#filtros button");
+    if (b) {
+      estado[b.dataset.f] = b.dataset.v;
+      b.parentElement.querySelectorAll(`button[data-f="${b.dataset.f}"]`).forEach(x => x.classList.toggle("activo", x === b));
+      filtrar(); return;
+    }
+    const fila = ev.target.closest(".fila");
+    if (fila && !ev.target.closest("a")) {
+      const art = fila.parentElement; art.classList.toggle("abierto");
+      fila.setAttribute("aria-expanded", art.classList.contains("abierto"));
+    }
+  });
+  document.addEventListener("keydown", ev => { if (ev.key === "Enter" && ev.target.classList.contains("fila")) ev.target.click(); });
+  $("#buscar").addEventListener("input", ev => { estado.texto = ev.target.value.trim(); filtrar(); });
+  document.addEventListener("mousemove", ev => {
+    const g = ev.target.closest(".grafico"); if (!g) return;
+    const svg = $("svg", g), tip = $(".tip", g), cur = $(".cursor", svg);
+    const serie = svg.dataset.serie.split(",").map(Number), fechas = svg.dataset.fechas.split(",");
+    const r = svg.getBoundingClientRect(), f = Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width));
+    const i = Math.round(f * (serie.length - 1)), px = (i / (serie.length - 1)) * 130;
+    cur.setAttribute("x1", px); cur.setAttribute("x2", px); cur.style.display = "";
+    tip.style.display = "block"; tip.style.left = (i / (serie.length - 1)) * 100 + "%"; tip.textContent = `${fechas[i] || ""} · ${fmt(serie[i], 2)}`;
+  });
+  document.addEventListener("mouseout", ev => {
+    const g = ev.target.closest && ev.target.closest(".grafico"); if (!g || g.contains(ev.relatedTarget)) return;
+    $(".tip", g).style.display = "none"; const c = $(".cursor", g); if (c) c.style.display = "none";
+  });
+
+  const carga = window.__DATOS ? Promise.resolve(window.__DATOS)
+    : fetch("datos.json?v=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+  carga.then(d => { datos = d; render(); })
+    .catch(e => { $("#meta").textContent = "No se pudo cargar datos.json (" + e.message + ")."; });
+})();
+</script>
+</body>
+</html>
