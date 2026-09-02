@@ -167,11 +167,11 @@
     </svg><div class="tip"></div>`;
   }
 
-  function barra(score) {
+  function barra(score, tendencia) {
     const p = Math.min(100, Math.abs(score)) / 2;
     const color = score >= 0 ? "var(--alcista)" : "var(--bajista)";
     const est = score >= 0 ? `left:50%;width:${p}%` : `right:50%;width:${p}%`;
-    return `<div class="barra"><i style="${est};background:${color}"></i></div><small>score ${score > 0 ? "+" : ""}${fmt(score, 0)} · tendencia ${esc(score >= 0 ? "" : "")}</small>`;
+    return `<div class="barra"><i style="${est};background:${color}"></i></div><small>score ${score > 0 ? "+" : ""}${fmt(score, 0)} · tendencia ${esc(tendencia || "")}</small>`;
   }
 
   function tarjeta(a) {
@@ -187,7 +187,7 @@
         <div class="nombre"><b>${esc(a.simbolo)}</b> <span class="meta">${esc(a.byma !== a.simbolo ? "· en IOL: " + a.byma : "")}</span><small>${esc(a.nombre)} · ${esc(a.categoria === "cedear" ? "CEDEAR" : a.categoria === "etf" ? "ETF" : "Argentina")}</small></div>
         <div class="precio">${esc(a.moneda === "ARS" ? "$" : "US$")} ${fmt(a.precio, 2)}<small class="${signo(a.var_dia)}">${pct(a.var_dia)} hoy</small></div>
         <div class="grafico">${sparkline(a.serie, a.serie_fechas)}</div>
-        <div class="score">${barra(a.score)}</div>
+        <div class="score">${barra(a.score, a.tendencia)}</div>
         <div class="senal">${chip(a.senal, e.sub)}</div>
         <div class="flecha">⌄</div>
       </div>
