@@ -80,6 +80,12 @@
   details.machete .tabla td, details.machete .tabla th { text-align: left; font-family: inherit; }
   footer { margin-top: 32px; padding: 16px 0 24px; border-top: 1px solid var(--borde); color: var(--tinta3); font-size: 12.5px; line-height: 1.6; }
   .aviso { background: #2a2416; border: 1px solid #5a4a1e; color: var(--ambar); padding: 10px 14px; border-radius: 8px; font-size: 13.5px; margin-top: 12px; }
+  /* Cartel de versión nueva (norma del 30/09/2026). Abajo y fijo; nunca recarga solo. */
+  .aviso-version { position: fixed; left: 50%; transform: translateX(-50%); bottom: 16px; z-index: 60; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center;
+    width: max-content; max-width: calc(100% - 32px); padding: 12px 16px; border-radius: 12px; background: var(--panel); border: 1px solid var(--acento); box-shadow: 0 8px 24px rgba(0,0,0,.45); font-size: 14px; }
+  .aviso-version[hidden] { display: none; }
+  .aviso-version button { padding: 8px 16px; border-radius: 999px; border: 0; cursor: pointer; background: var(--acento); color: #fff; font-weight: 700; font-size: 14px; }
+  .sello { font-family: var(--mono); color: var(--tinta3); }
   @media (max-width: 760px) {
     .fila { grid-template-columns: 1fr 100px 28px; grid-template-areas: "n p f" "g g g" "s s s" "c c c"; gap: 8px 10px; }
     .nombre { grid-area: n; } .precio { grid-area: p; } .grafico { grid-area: g; } .nums { grid-area: s; } .senal { grid-area: c; } .flecha { grid-area: f; }
@@ -139,8 +145,15 @@
     Precios: Yahoo Finance vía yfinance, uso personal no comercial, sin afiliación con Yahoo. Noticias: titulares
     de los medios citados, con link a la fuente. El resumen del día lo genera una IA a partir de titulares y puede
     contener errores.<br>
-    Desarrollado por NEURON P.
+    <span class="sello" id="selloVersion">V1.1</span> · Desarrollado por NEURON P.
   </footer>
+</div>
+
+<!-- Cartel de versión nueva (norma del 30/09/2026). Arranca escondido; lo muestra el script cuando
+     el sello del servidor dejó de ser el que cargó esta pantalla. Nunca recarga solo. -->
+<div id="avisoVersion" class="aviso-version" hidden>
+  <span>Hay una versión nueva de la app.</span>
+  <button type="button" id="btnActualizar">Actualizar</button>
 </div>
 
 <script>
@@ -295,6 +308,35 @@
     const g = ev.target.closest && ev.target.closest(".grafico"); if (!g || g.contains(ev.relatedTarget)) return;
     $(".tip", g).style.display = "none"; const c = $(".cursor", g); if (c) c.style.display = "none";
   });
+
+  // Versión y actualización (norma del 30/09/2026): el sello lo escribe la publicación en
+  // version.json; la página pregunta sola al volver al frente, al recuperar señal y cada 5 min,
+  // y muestra el cartel. Nunca recarga sola.
+  let selloCargado = null;
+  async function leerSello() {
+    try {
+      const r = await fetch("version.json?v=" + Date.now(), { cache: "no-store" });
+      if (!r.ok) return null;
+      const d = await r.json();
+      return d && d.id ? d : null;
+    } catch (e) { return null; }
+  }
+  function hayQueAvisar(cargado, delServidor) {
+    return !!(cargado && delServidor && delServidor.id && delServidor.id !== cargado.id);
+  }
+  async function revisarVersion() {
+    const ahora = await leerSello();
+    if (hayQueAvisar(selloCargado, ahora)) $("#avisoVersion").hidden = false;
+  }
+  (async function arrancarVersion() {
+    selloCargado = await leerSello();
+    if (selloCargado) $("#selloVersion").textContent = `${selloCargado.version} · ${selloCargado.sello}`;
+    $("#btnActualizar").addEventListener("click", () => { window.location.replace(window.location.pathname + "?v=" + Date.now()); });
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) revisarVersion(); });
+    window.addEventListener("online", revisarVersion);
+    setInterval(revisarVersion, 5 * 60 * 1000);
+  })();
+  window.__sanVersion = { hayQueAvisar };
 
   const carga = window.__DATOS ? Promise.resolve(window.__DATOS)
     : fetch("datos.json?v=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });

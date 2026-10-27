@@ -98,6 +98,20 @@ caso("símbolo de 1 letra no matchea por sí solo", len(v["C"]) == 1)
 caso("la noticia sin relación no se vincula", sum(len(x) for x in v.values()) == 3)
 caso("limpiar_html saca etiquetas", noticias._limpiar_html("<p>Hola <b>mundo</b></p>") == "Hola mundo")
 
+print("Versión (norma del 30/09/2026)")
+import generar  # noqa: E402
+from datetime import datetime  # noqa: E402
+s = generar.sello(datetime(2026, 10, 27, 14, 5), "V1.1")
+caso("sello legible «V1.1 · 27/10 14:05»", f"{s['version']} · {s['sello']}" == "V1.1 · 27/10 14:05", str(s))
+caso("id distinto en otro minuto", generar.sello(datetime(2026, 10, 27, 14, 6), "V1.1")["id"] != s["id"])
+caso("id igual en el mismo minuto", generar.sello(datetime(2026, 10, 27, 14, 5, 59), "V1.1")["id"] == s["id"])
+html = open(os.path.join(RAIZ, "docs", "index.html"), encoding="utf-8").read()
+caso("la página tiene el sello en el pie y el cartel con botón Actualizar",
+     'id="selloVersion"' in html and 'id="avisoVersion"' in html and 'id="btnActualizar"' in html and "Hay una versión nueva de la app" in html)
+caso("la página pregunta al volver al frente, al recuperar señal y cada 5 min",
+     "visibilitychange" in html and '"online"' in html and "5 * 60 * 1000" in html)
+caso("nunca recarga sola: sólo el botón llama a location.replace", html.count("location.replace") == 1 and "btnActualizar" in html.split("location.replace")[0][-200:])
+
 print("Universo")
 act = json.load(open(os.path.join(RAIZ, "config", "activos.json"), encoding="utf-8"))["activos"]
 caso("50 instrumentos", len(act) == 50, str(len(act)))

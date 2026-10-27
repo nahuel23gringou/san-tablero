@@ -17,6 +17,14 @@ sys.path.insert(0, RAIZ)
 from motor import precios, indicadores, senales, noticias, resumen_ia  # noqa: E402
 
 ARG = timezone(timedelta(hours=-3))
+VERSION = "V1.1"  # sube a mano cuando cambia la app; el sello lo pone cada publicación
+
+
+def sello(ahora, version=VERSION):
+    """«V1.1 · dd/mm hh:mm» (norma del 30/09/2026). El id es el minuto de publicación: es lo que
+    compara la página abierta para saber que quedó vieja. Lo escribe la publicación, nunca una mano."""
+    texto = ahora.strftime("%d/%m %H:%M")
+    return {"version": version, "sello": texto, "id": f"{version}-{ahora.strftime('%d%m%H%M')}"}
 
 
 def cargar(nombre):
@@ -105,6 +113,8 @@ def main():
     os.makedirs(os.path.join(args.salida, "historial"), exist_ok=True)
     with open(os.path.join(args.salida, "datos.json"), "w", encoding="utf-8") as f:
         json.dump(salida, f, ensure_ascii=False, separators=(",", ":"))
+    with open(os.path.join(args.salida, "version.json"), "w", encoding="utf-8") as f:
+        json.dump(sello(ahora), f, ensure_ascii=False)
     if fecha_datos and not args.limite:
         resumen_dia = {"fecha": fecha_datos, "generado": salida["generado"], "conteo": conteo,
                        "activos": [{k: e[k] for k in ("simbolo", "senal", "williams", "hist", "precio", "var_dia")} for e in evaluados]}
