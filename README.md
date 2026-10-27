@@ -34,8 +34,8 @@ python3 -m http.server 8765 --directory docs   # abrir http://localhost:8765
 ```
 
 En GitHub corre solo: `.github/workflows/diario.yml` (cron 08:30 UTC lunes a viernes; GitHub lo
-atrasa varias horas) genera `docs/` y lo commitea. La key de Gemini va en *Settings → Secrets →
-Actions → GEMINI_API_KEY*.
+atrasa varias horas) genera `docs/` y lo commitea. La clave de la IA va en *Settings → Secrets →
+Actions → ANTHROPIC_API_KEY* (o GEMINI_API_KEY como respaldo).
 
 ## Estructura
 
@@ -46,7 +46,7 @@ motor/precios.py       yfinance, lote + reintento; descarta la vela de hoy si la
 motor/indicadores.py   MACD, Williams %R, volumen, EMAs (pandas puro)
 motor/senales.py       el machete: clasificar(williams, hist_hoy, hist_ayer) -> señal + razón
 motor/noticias.py      RSS (Ámbito, Cronista, Infobae, iProfesional, Yahoo, CNBC, MarketWatch)
-motor/resumen_ia.py    Gemini: resumen del día + tono por activo (sólo titulares; reintenta ante 429)
+motor/resumen_ia.py    resumen del día + tono por activo (sólo titulares): Claude si hay ANTHROPIC_API_KEY, si no Gemini
 generar.py             orquesta y escribe docs/datos.json + docs/historial/
 docs/index.html        la página: botón CEDEARs / Acciones, filtro por señal, orden de compra a venta
 prueba.py              casos del motor (una fila del machete por caso, bordes, series sintéticas)
