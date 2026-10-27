@@ -1,0 +1,25 @@
+{
+  "_funcionalidad": "san_broker/machete",
+  "_nota": "El 'machete de trading' de Santiago (27/10/2026). Williams %R de 14 ruedas y MACD 12/26/9. El histograma se compara contra estos umbrales expresado POR CADA 100 USD DE PRECIO (histograma_base = por_100): un histograma de 2,5 en una acción de 250 USD vale 1,0. Con 'absoluto' se usa el número crudo de TradingView, que depende del precio de cada acción. Las bandas son [desde, hasta], inclusive.",
+  "williams_periodo": 14,
+  "macd": {"rapida": 12, "lenta": 26, "senal": 9},
+  "histograma_base": "por_100",
+  "umbrales": {
+    "compra_fuerte": {"williams": [-80, -50], "hist": [-0.5, 0.5]},
+    "compra_cauta":  {"williams": [-50, -20], "hist": [0.1, 0.7]},
+    "mantener":      {"williams": [-50, -20], "hist": [0.7, 3.0]},
+    "no_comprar":    {"williams": [-20, 0],   "hist_min": 3.0},
+    "alerta_salida": {"williams_min": -20},
+    "venta_fuerte":  {}
+  },
+  "orden": ["COMPRA_FUERTE", "COMPRA_CAUTA", "MANTENER", "NO_COMPRAR", "ALERTA_SALIDA", "VENTA_FUERTE", "SIN_SENAL"],
+  "etiquetas": {
+    "COMPRA_FUERTE": "Compra fuerte",
+    "COMPRA_CAUTA": "Compra cauta",
+    "MANTENER": "Mantener",
+    "NO_COMPRAR": "No comprar (FOMO)",
+    "ALERTA_SALIDA": "Alerta salida",
+    "VENTA_FUERTE": "Venta fuerte",
+    "SIN_SENAL": "Sin señal"
+  }
+}

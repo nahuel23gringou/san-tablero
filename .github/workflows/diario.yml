@@ -1,11 +1,13 @@
 # FUNCIONALIDAD: san_broker/automatismo_diario
-# Corre de lunes a viernes a las 08:00 de Argentina (11:00 UTC), antes de la apertura,
-# regenera docs/ y lo commitea. GitHub Pages sirve docs/ desde main.
+# Corre de lunes a viernes a las 05:30 de Argentina (08:30 UTC), regenera docs/ y lo commitea.
+# GitHub Pages sirve docs/ desde main. Se pide temprano porque GitHub atrasa los cron hasta
+# 4-6 horas (medido en octubre de 2026: pedido a las 11:00 UTC, corría 15:30-17:00 UTC) y el
+# tablero tiene que estar antes de la apertura de las 10:30 hs.
 name: Tablero diario
 
 on:
   schedule:
-    - cron: "0 11 * * 1-5"
+    - cron: "30 8 * * 1-5"
   workflow_dispatch:
 
 permissions:

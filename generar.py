@@ -34,8 +34,8 @@ def main():
     activos = cargar("activos.json")["activos"]
     if args.limite:
         activos = activos[: args.limite]
-    cfg = cargar("pesos.json")
-    pesos, umbrales = cfg["pesos"], cfg["umbrales"]
+    machete = cargar("machete.json")
+    orden = machete.get("orden", senales.ORDEN)
 
     simbolos = [a["simbolo"] for a in activos]
     print(f"Bajando precios de {len(simbolos)} activos…", flush=True)
@@ -51,8 +51,8 @@ def main():
         if df is None:
             continue
         try:
-            ind = indicadores.calcular_todo(df)
-            ev = senales.evaluar(ind, pesos, umbrales)
+            ind = indicadores.calcular_todo(df, machete)
+            ev = senales.evaluar(ind, machete)
         except Exception as e:
             errores.append(f"{a['simbolo']}: {type(e).__name__}: {e}")
             continue
@@ -61,7 +61,8 @@ def main():
             "categoria": a["categoria"], "moneda": a.get("moneda", "USD"),
         })
         evaluados.append(ev)
-    evaluados.sort(key=lambda e: e["score"], reverse=True)
+    # de compra a venta; adentro de cada señal, el más sobrevendido primero
+    evaluados.sort(key=lambda e: (e["orden"], e["williams"] if e["williams"] is not None else 0))
     for e in errores:
         print("  error", e)
 
@@ -88,13 +89,12 @@ def main():
 
     ahora = datetime.now(ARG)
     fecha_datos = max((e["fecha"] for e in evaluados), default=None)
-    conteo = {k: sum(1 for e in evaluados if e["senal"] == k) for k in ("COMPRAR", "VENDER", "ESPERAR")}
+    conteo = {k: sum(1 for e in evaluados if e["senal"] == k) for k in orden}
     salida = {
         "generado": ahora.strftime("%Y-%m-%d %H:%M"),
         "fecha_datos": fecha_datos,
         "conteo": conteo,
-        "pesos": pesos,
-        "umbrales": umbrales,
+        "machete": {k: machete[k] for k in ("williams_periodo", "macd", "histograma_base", "umbrales", "orden", "etiquetas")},
         "resumen_ia": ia if ia and "error" not in ia else None,
         "aviso_ia": ia.get("error") if ia and "error" in ia else (None if ia else "Sin resumen IA"),
         "faltantes": faltantes + errores,
@@ -107,7 +107,7 @@ def main():
         json.dump(salida, f, ensure_ascii=False, separators=(",", ":"))
     if fecha_datos and not args.limite:
         resumen_dia = {"fecha": fecha_datos, "generado": salida["generado"], "conteo": conteo,
-                       "activos": [{k: e[k] for k in ("simbolo", "senal", "score", "precio", "var_dia")} for e in evaluados]}
+                       "activos": [{k: e[k] for k in ("simbolo", "senal", "williams", "hist", "precio", "var_dia")} for e in evaluados]}
         with open(os.path.join(args.salida, "historial", f"{fecha_datos}.json"), "w", encoding="utf-8") as f:
             json.dump(resumen_dia, f, ensure_ascii=False, separators=(",", ":"))
         fechas = sorted(x[:-5] for x in os.listdir(os.path.join(args.salida, "historial")) if x.endswith(".json") and x[0].isdigit())
